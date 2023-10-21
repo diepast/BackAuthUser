@@ -1,17 +1,16 @@
-require('dotenv').config()
 const express = require('express')
-const app = express()
+const cors = require('cors')
+require('dotenv').config()
 require('./config/database.js')
+const Router = require('./routes/routes')
 
-const eventsRouter = require('./routes/eventsRouter')
-
-app.use( express.json() )
-
-const PORT = process.env.PORT || 4000
-
+const app = express()
+const PORT = process.env.PORT || 5000
 app.set("port", PORT)
 
-app.get('/', (req,res)=>{res.send("servidor creado")})
-app.use('/api' , eventsRouter )
+app.use(cors())
+app.use( express.json() )
+app.use('/api' , Router )
 
+app.get('/', (req,res)=>{res.send("servidor creado")})
 app.listen(PORT, ()=>{console.log("Servidor corriendo en puerto: "+app.get('port'))})
