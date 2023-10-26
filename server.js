@@ -10,7 +10,7 @@ app.set("port", PORT)
 
 app.use(cors())
 app.use( express.json() )
-app.use('/api' , Router )
+app.use('/api/users' , Router )
 
 app.get('/', (req,res)=>{res.send("servidor creado")})
 app.listen(PORT, ()=>{console.log("Servidor corriendo en puerto: "+app.get('port'))})

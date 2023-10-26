@@ -1,5 +1,4 @@
 const Users = require("../models/userModel");
-const User = require("../models/userModel");
 
 const bycriptjs = require("bcryptjs");
 
@@ -7,12 +6,10 @@ const userControllers = {
   
   SignUp: async (req, res) => {
     const { fullName, email, password, from, aplication } = req.body.userData;
-    console.log(req.body.userData);
     const contraseñaHash = bycriptjs.hashSync(password, 10);
     try {
       const userExist = await Users.findOne({ email });
-      console.log(userExist);
-     
+      
       if (userExist) {
         if(userExist.from.indexOf(from) !== -1) {
           res.json({ success: false, from:from, response: "Ya se realizó sign up mediante " +from+ " por favor realiza sign In" });
@@ -26,7 +23,7 @@ const userControllers = {
         } 
       } 
       else {
-        const nuevoUsuario = new User({
+        const nuevoUsuario = new Users({
           fullName,
           email,
           password:[contraseñaHash],
@@ -45,5 +42,77 @@ const userControllers = {
       });
     }
   },
+
+  SignIn: async (req, res) => {
+    const {email, password, from} = req.body.userData;
+    
+
+    try{
+        const usuario= await Users.findOne({email});
+
+        if(!usuario){
+          res.json({ 
+            success: false,
+            from: from,
+            message: "Usuario o contraseña incorrectosNo has realizado sign up con este e-mail, realizalo antes de hacer sign In"
+          }) 
+        }else{
+                const contraseñaCoincide = usuario.password.filter(pass =>bycriptjs.compareSync(password, pass));
+                const dataUser = {
+                id: usuario._id,
+                fullName: usuario.fullName,
+                email: usuario.email,
+                from: from,
+              }
+              if( from !== 'signUp-form'){
+                
+                if(contraseñaCoincide.length > 0){
+                  res.json({
+                    success:true,
+                    from:from,
+                    response: dataUser,
+                    message: "Bienvenido Nuevamente" + usuario.fullName
+                  })
+                  }else{
+                        const contraseñaHash = bycriptjs.hashSync(password, 10);
+                        usuario.from.push(from);
+                        usuario.password.push(contraseñaHash);
+                        
+                        await usuario.save();
+                        res.json({
+                          success:true,
+                          from:from,
+                          response: {dataUser},
+                          message: "No contabas con " +from+ " en tu cuenta, pero ya lo agregamos"
+                        })
+                }   
+              }else{
+                    if(contraseñaCoincide.length > 0){
+                          res.json({
+                          success: true,
+                          from:from,
+                          response: {dataUser},
+                          message: "Bienvenido Nuevamente " + dataUser.fullName
+                        })
+
+                    } else{
+                        res.json({
+                          success: false,
+                          from:from,
+                          message: "El usuario o la contraseña incorrectos"
+                        })
+                    }
+            }
+          }
+        }catch(error){
+        
+        res.json({
+          success: false,
+          from:from,
+          message: "Algo salió mal, intentalo nuevamente en unos minutos",
+          response: err 
+      });
+    }
+}
 }
 module.exports = userControllers;
